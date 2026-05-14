@@ -1,13 +1,28 @@
 const express = require('express');
 const router = express.Router();
+const rateLimit = require('express-rate-limit');
 const auth = require('../middleware/auth');
-const { queryOpenRouter } = require('./aiHelper');
+const { queryOpenRouter, parseAIJson, saveAIResult } = require('./aiHelper');
+
+const aiRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  keyGenerator: (req) => req.user ? 'user:' + (req.user.id || req.user.userId) : req.ip,
+  message: { error: 'Too many AI requests. Limit: 20 per hour.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 router.get('/', auth, async (req, res) => {
   try {
     const pool = req.app.get('db');
-    const result = await pool.query('SELECT * FROM dropped_calls ORDER BY created_at DESC');
-    res.json(result.rows);
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, parseInt(req.query.limit) || 20);
+    const offset = (page - 1) * limit;
+    const countResult = await pool.query('SELECT COUNT(*) FROM dropped_calls');
+    const total = parseInt(countResult.rows[0].count);
+    const result = await pool.query('SELECT * FROM dropped_calls ORDER BY created_at DESC LIMIT $1 OFFSET $2', [limit, offset]);
+    res.json({ data: result.rows, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -66,7 +81,7 @@ router.delete('/:id', auth, async (req, res) => {
   }
 });
 
-router.post('/:id/analyze', auth, async (req, res) => {
+router.post('/:id/analyze', auth, aiRateLimiter, async (req, res) => {
   try {
     const pool = req.app.get('db');
     const result = await pool.query('SELECT * FROM dropped_calls WHERE id = $1', [req.params.id]);

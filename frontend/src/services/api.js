@@ -109,4 +109,18 @@ export const usageTrackingAPI = {
   ...createCRUD('/usage-tracking'),
 };
 
+// New AI feature endpoints
+export const aiAPI = {
+  proactiveCare: () => api.post('/ai/proactive-care'),
+  outreachCampaigns: () => api.get('/ai/outreach-campaigns'),
+  npsForecast: () => api.post('/ai/nps-forecast'),
+  dispatchPlan: (date) => api.post('/ai/dispatch-plan', { date }),
+};
+
+// Customer 360
+export const customer360API = {
+  getView: (name) => api.get(`/customers/${encodeURIComponent(name)}/360-view`),
+  getAll: () => api.get('/customers'),
+};
+
 export default api;

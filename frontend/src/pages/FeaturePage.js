@@ -289,7 +289,8 @@ function FeaturePage({ feature }) {
     try {
       setLoading(true);
       const res = await config.api.getAll();
-      setData(res.data);
+      // Handle both paginated { data, pagination } and flat array responses
+      setData(Array.isArray(res.data) ? res.data : (res.data?.data || []));
     } catch (err) {
       showToast('Failed to load data', 'error');
     } finally {
@@ -478,6 +479,21 @@ function FeaturePage({ feature }) {
                   </div>
                 ))}
               </div>
+
+              {/* Parsed AI Scores — shown after analysis */}
+              {aiResult && aiResult.parsed && (
+                <div style={{ background: '#0f172a', border: '1px solid #7c3aed', borderRadius: '8px', padding: '16px', margin: '16px 0' }}>
+                  <div style={{ color: '#7c3aed', fontWeight: 700, marginBottom: '12px', fontSize: '0.9rem' }}>AI Parsed Scores</div>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    {Object.entries(aiResult.parsed).filter(([k, v]) => typeof v === 'number' || (typeof v === 'string' && !Array.isArray(v) && v.length < 30)).map(([k, v]) => (
+                      <div key={k} style={{ textAlign: 'center', minWidth: '80px' }}>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#06b6d4' }}>{typeof v === 'number' ? v : v}</div>
+                        <div style={{ fontSize: '0.7rem', color: '#999' }}>{k.replace(/_/g, ' ')}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* AI Analysis */}
               {(aiLoading || aiResult) && (

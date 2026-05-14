@@ -1,20 +1,33 @@
 const express = require('express');
 const router = express.Router();
+const rateLimit = require('express-rate-limit');
 const auth = require('../middleware/auth');
-const { queryOpenRouter } = require('./aiHelper');
+const { queryOpenRouter, parseAIJson, saveAIResult } = require('./aiHelper');
 
-// Get all call quality records
+const aiRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  keyGenerator: (req) => req.user ? 'user:' + (req.user.id || req.user.userId) : req.ip,
+  message: { error: 'Too many AI requests. Limit: 20 per hour.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 router.get('/', auth, async (req, res) => {
   try {
     const pool = req.app.get('db');
-    const result = await pool.query('SELECT * FROM call_quality ORDER BY created_at DESC');
-    res.json(result.rows);
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, parseInt(req.query.limit) || 20);
+    const offset = (page - 1) * limit;
+    const countResult = await pool.query('SELECT COUNT(*) FROM call_quality');
+    const total = parseInt(countResult.rows[0].count);
+    const result = await pool.query('SELECT * FROM call_quality ORDER BY created_at DESC LIMIT $1 OFFSET $2', [limit, offset]);
+    res.json({ data: result.rows, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Get single record
 router.get('/:id', auth, async (req, res) => {
   try {
     const pool = req.app.get('db');
@@ -26,7 +39,6 @@ router.get('/:id', auth, async (req, res) => {
   }
 });
 
-// Create new record
 router.post('/', auth, async (req, res) => {
   try {
     const pool = req.app.get('db');
@@ -34,7 +46,7 @@ router.post('/', auth, async (req, res) => {
     const result = await pool.query(
       `INSERT INTO call_quality (customer_name, phone_number, call_duration, signal_strength, network_type, location, jitter_ms, packet_loss_pct, latency_ms)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-      [customer_name, phone_number, call_duration, signal_strength, network_type, location, jitter_ms, packet_loss_pct, latency_ms]
+      [customer_name, phone_number, call_duration, signal_strength, network_type, location, jitter_ms, packet_loss_pct, latency_ms],
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -42,7 +54,6 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// Update record
 router.put('/:id', auth, async (req, res) => {
   try {
     const pool = req.app.get('db');
@@ -50,7 +61,7 @@ router.put('/:id', auth, async (req, res) => {
     const result = await pool.query(
       `UPDATE call_quality SET customer_name=$1, phone_number=$2, call_duration=$3, signal_strength=$4, network_type=$5, location=$6, jitter_ms=$7, packet_loss_pct=$8, latency_ms=$9, updated_at=NOW()
        WHERE id=$10 RETURNING *`,
-      [customer_name, phone_number, call_duration, signal_strength, network_type, location, jitter_ms, packet_loss_pct, latency_ms, req.params.id]
+      [customer_name, phone_number, call_duration, signal_strength, network_type, location, jitter_ms, packet_loss_pct, latency_ms, req.params.id],
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Record not found' });
     res.json(result.rows[0]);
@@ -59,7 +70,6 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// Delete record
 router.delete('/:id', auth, async (req, res) => {
   try {
     const pool = req.app.get('db');
@@ -71,15 +81,14 @@ router.delete('/:id', auth, async (req, res) => {
   }
 });
 
-// AI: Predict call quality
-router.post('/:id/predict', auth, async (req, res) => {
+router.post('/:id/predict', auth, aiRateLimiter, async (req, res) => {
   try {
     const pool = req.app.get('db');
     const result = await pool.query('SELECT * FROM call_quality WHERE id = $1', [req.params.id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Record not found' });
 
     const record = result.rows[0];
-    const prompt = `Analyze this telecom call quality data and predict the quality score (1-10), identify potential issues, and provide recommendations:
+    const prompt = `Analyze this telecom call quality data and return ONLY valid JSON:
 
 Customer: ${record.customer_name}
 Call Duration: ${record.call_duration} seconds
@@ -90,21 +99,31 @@ Jitter: ${record.jitter_ms} ms
 Packet Loss: ${record.packet_loss_pct}%
 Latency: ${record.latency_ms} ms
 
-Provide your analysis in this format:
-QUALITY SCORE: [1-10]
-RISK LEVEL: [Low/Medium/High/Critical]
-KEY ISSUES: [list main issues]
-RECOMMENDATIONS: [actionable recommendations]
-PREDICTED IMPACT: [what will happen if not addressed]`;
+Return JSON with this exact structure:
+{
+  "quality_score": 7,
+  "risk_level": "Medium",
+  "issues": ["issue1", "issue2"],
+  "recommendations": ["recommendation1", "recommendation2"],
+  "predicted_impact": "description of impact if not addressed",
+  "root_cause": "primary root cause"
+}`;
 
-    const aiResponse = await queryOpenRouter(prompt, 'You are a telecom network quality analyst AI. Provide detailed, actionable analysis of call quality metrics.');
+    const aiResponse = await queryOpenRouter(prompt, 'You are a telecom network quality analyst AI. Always respond with valid JSON only.');
+    const parsed = parseAIJson(aiResponse.content);
+
+    // Use parsed score — no Math.random()
+    const qualityScore = parsed?.quality_score != null ? parseFloat(parsed.quality_score) : null;
+    const riskLevel = parsed?.risk_level || 'Unknown';
 
     await pool.query(
       'UPDATE call_quality SET quality_score = $1, ai_analysis = $2, updated_at = NOW() WHERE id = $3',
-      [Math.floor(Math.random() * 4) + 6, aiResponse.content, req.params.id]
+      [qualityScore, aiResponse.content, req.params.id],
     );
 
-    res.json({ analysis: aiResponse.content, model: aiResponse.model, usage: aiResponse.usage });
+    await saveAIResult(pool, req.user?.id || req.user?.userId, 'call-quality/predict', record, parsed || { raw: aiResponse.content });
+
+    res.json({ analysis: aiResponse.content, parsed, quality_score: qualityScore, risk_level: riskLevel, model: aiResponse.model, usage: aiResponse.usage });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

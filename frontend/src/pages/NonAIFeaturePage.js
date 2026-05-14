@@ -140,7 +140,7 @@ function NonAIFeaturePage({ feature }) {
     try {
       setLoading(true);
       const res = await config.api.getAll();
-      setData(res.data);
+      setData(Array.isArray(res.data) ? res.data : (res.data?.data || []));
     } catch (err) {
       showToast('Failed to load data', 'error');
     } finally {
