@@ -32,6 +32,10 @@ import GapNoCorrelationEngineBetweenNetworkPerformanceAnd from './pages/GapNoCor
 import GapNoWebhooksForOutageEvents from './pages/GapNoWebhooksForOutageEvents'
 import GapLimitedNotificationsOneReferenceOnlyNotA from './pages/GapLimitedNotificationsOneReferenceOnlyNotA'
 import GapNoAuditLogging from './pages/GapNoAuditLogging'
+import CustomViewsPage from './pages/CustomViewsPage'
+
+// Fallback ProtectedRoute: pass-through (auth is enforced by App-level gate below).
+const ProtectedRoute = ({ children }) => <>{children}</>;
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -101,6 +105,7 @@ function App() {
       <Route path="/gap-no-webhooks-for-outage-events" element={<ProtectedRoute><GapNoWebhooksForOutageEvents /></ProtectedRoute>} />
       <Route path="/gap-limited-notifications-one-reference-only-not-a-full" element={<ProtectedRoute><GapLimitedNotificationsOneReferenceOnlyNotA /></ProtectedRoute>} />
       <Route path="/gap-no-audit-logging" element={<ProtectedRoute><GapNoAuditLogging /></ProtectedRoute>} />
+      <Route path="/custom-views" element={<CustomViewsPage />} />
       <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Layout>

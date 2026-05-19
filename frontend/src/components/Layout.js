@@ -25,6 +25,7 @@ const navItems = [
   { path: '/dynamic-plan-recommendations', label: 'Plan Recommender (AI)', icon: '✨' },
   { path: '/contact-threads', label: 'Contact Threads', icon: '🧵' },
   { path: '/billing-integrations', label: 'Billing Integrations', icon: '🔌' },
+  { path: '/custom-views', label: 'CX Views', icon: '🧭' },
   { divider: true, label: 'Operations' },
   { path: '/customer-profiles', label: 'Customer Profiles', icon: '👤' },
   { path: '/support-tickets', label: 'Support Tickets', icon: '🎫' },

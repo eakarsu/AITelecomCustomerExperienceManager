@@ -53,12 +53,6 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Error handler
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
 app.use('/api/churn-early-warning', require('./routes/churnEarlyWarning')); app.use('/api/sentiment-routing', require('./routes/sentimentRouting')); app.use('/api/call-quality-rca', require('./routes/callQualityRca')); app.use('/api/dynamic-plan-recommendations', require('./routes/dynamicPlanRecommendations')); app.use('/api/customer-health-score', require('./routes/customerHealthScore')); app.use('/api/outage-notification', require('./routes/outageNotification'));
 
 // === Batch 08 Gaps & Frontend Mounts ===
@@ -72,6 +66,20 @@ app.use('/api/gap-no-correlation-engine-between-network-performance-and-satisfac
 app.use('/api/gap-no-webhooks-for-outage-events', require('./routes/gapNoWebhooksForOutageEvents'));
 app.use('/api/gap-limited-notifications-one-reference-only-not-a-full', require('./routes/gapLimitedNotificationsOneReferenceOnlyNotAFull'));
 app.use('/api/gap-no-audit-logging', require('./routes/gapNoAuditLogging'));
+
+// Custom Views — mounted BEFORE 404 handler
+app.use('/api/custom-views', require('./routes/customViews'));
+
+// 404 for unknown /api/* paths
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: 'Not found', path: req.originalUrl });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
 app.listen(PORT, () => {
   console.log(`Backend server running on port ${PORT}`);
