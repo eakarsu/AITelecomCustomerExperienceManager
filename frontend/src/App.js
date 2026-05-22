@@ -15,6 +15,9 @@ import DynamicPlanRecommendations from './pages/DynamicPlanRecommendations';
 import ContactThreads from './pages/ContactThreads';
 import BillingIntegrations from './pages/BillingIntegrations';
 import Layout from './components/Layout';
+import CodexCustomVizFeature from './pages/CodexCustomVizFeature';
+import CodexOperationsFeature from './pages/CodexOperationsFeature';
+
 // === Batch 08 Gaps & Frontend Mounts ===
 import CfChurnEarlyWarningSystemWithRealTime from './pages/CfChurnEarlyWarningSystemWithRealTime'
 import CfSentimentDrivenRoutingEscalatingNegativeCallsTo from './pages/CfSentimentDrivenRoutingEscalatingNegativeCallsTo'
@@ -60,6 +63,9 @@ function App() {
     <Router>
       <Layout onLogout={handleLogout}>
         <Routes>
+        <Route path="/codex/custom-viz" element={<ProtectedRoute><CodexCustomVizFeature /></ProtectedRoute>} />
+        <Route path="/codex/operations" element={<ProtectedRoute><CodexOperationsFeature /></ProtectedRoute>} />
+
           <Route path="/" element={<Dashboard />} />
           <Route path="/call-quality" element={<FeaturePage feature="call-quality" />} />
           <Route path="/dropped-calls" element={<FeaturePage feature="dropped-calls" />} />
