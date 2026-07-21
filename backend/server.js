@@ -1,86 +1,100 @@
-require('dotenv').config({ path: '../.env' });
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const { Pool } = require('pg');
+const pool = require('./db');
+const auth = require('./middleware/auth');
+const { validateRuntime } = require('./governance/runtime');
+const { createProviderGate } = require('./governance/providerGate');
+
+validateRuntime();
 
 const app = express();
 const PORT = process.env.BACKEND_PORT || 3001;
+const allowedOrigins = String(process.env.CORS_ORIGINS || process.env.CLIENT_URL || 'http://localhost:3000')
+  .split(',').map((value) => value.trim()).filter(Boolean);
+const providerPrefixes = [
+  '/api/ai', '/api/call-quality', '/api/dropped-calls', '/api/plan-recommendations',
+  '/api/proactive-issues', '/api/nps-prediction', '/api/churn-analysis',
+  '/api/network-outages', '/api/customer-sentiment', '/api/billing-disputes',
+  '/api/sla-compliance', '/api/tower-performance', '/api/billing-integrations',
+  '/api/churn-early-warning', '/api/sentiment-routing', '/api/call-quality-rca',
+  '/api/dynamic-plan-recommendations', '/api/customer-health-score',
+  '/api/outage-notification', '/api/gap-',
+];
 
-// Database connection
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-
-// Make pool available to routes
 app.set('db', pool);
-
-// Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('CORS origin denied'));
+  },
   credentials: true,
 }));
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
-// Routes
+app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api/call-quality', require('./routes/callQuality'));
-app.use('/api/dropped-calls', require('./routes/droppedCalls'));
-app.use('/api/plan-recommendations', require('./routes/planRecommendations'));
-app.use('/api/proactive-issues', require('./routes/proactiveIssues'));
-app.use('/api/nps-prediction', require('./routes/npsPrediction'));
-app.use('/api/churn-analysis', require('./routes/churnAnalysis'));
-app.use('/api/network-outages', require('./routes/networkOutages'));
-app.use('/api/customer-sentiment', require('./routes/customerSentiment'));
-app.use('/api/billing-disputes', require('./routes/billingDisputes'));
-app.use('/api/sla-compliance', require('./routes/slaCompliance'));
-app.use('/api/tower-performance', require('./routes/towerPerformance'));
-app.use('/api/customer-profiles', require('./routes/customerProfiles'));
-app.use('/api/support-tickets', require('./routes/supportTickets'));
-app.use('/api/payment-history', require('./routes/paymentHistory'));
-app.use('/api/appointments', require('./routes/appointments'));
-app.use('/api/usage-tracking', require('./routes/usageTracking'));
+app.use('/api/governance', require('./governance/router'));
+app.use('/api', auth);
+app.use(createProviderGate(providerPrefixes));
 
-// New feature routes
-app.use('/api/ai', require('./routes/aiFeatures'));
-app.use('/api/customers', require('./routes/customer360'));
+const protectedRoutes = [
+  ['/api/customer-profiles', './routes/customerProfiles'],
+  ['/api/support-tickets', './routes/supportTickets'],
+  ['/api/payment-history', './routes/paymentHistory'],
+  ['/api/appointments', './routes/appointments'],
+  ['/api/usage-tracking', './routes/usageTracking'],
+  ['/api/customers', './routes/customer360'],
+  ['/api/contact-threads', './routes/contactThreads'],
+  ['/api/custom-views', './routes/customViews'],
+];
+for (const [routePath, modulePath] of protectedRoutes) app.use(routePath, require(modulePath));
 
-// Apply pass 5 — additive routes (multi-channel contact threads, billing integrations).
-app.use('/api/contact-threads', require('./routes/contactThreads'));
-app.use('/api/billing-integrations', require('./routes/billingIntegrations'));
+if (process.env.ENABLE_LEGACY_PROVIDER_ROUTES === 'true') {
+  const legacyRoutes = [
+    ['/api/call-quality', './routes/callQuality'],
+    ['/api/dropped-calls', './routes/droppedCalls'],
+    ['/api/plan-recommendations', './routes/planRecommendations'],
+    ['/api/proactive-issues', './routes/proactiveIssues'],
+    ['/api/nps-prediction', './routes/npsPrediction'],
+    ['/api/churn-analysis', './routes/churnAnalysis'],
+    ['/api/network-outages', './routes/networkOutages'],
+    ['/api/customer-sentiment', './routes/customerSentiment'],
+    ['/api/billing-disputes', './routes/billingDisputes'],
+    ['/api/sla-compliance', './routes/slaCompliance'],
+    ['/api/tower-performance', './routes/towerPerformance'],
+    ['/api/billing-integrations', './routes/billingIntegrations'],
+    ['/api/ai', './routes/aiFeatures'],
+    ['/api/churn-early-warning', './routes/churnEarlyWarning'],
+    ['/api/sentiment-routing', './routes/sentimentRouting'],
+    ['/api/call-quality-rca', './routes/callQualityRca'],
+    ['/api/dynamic-plan-recommendations', './routes/dynamicPlanRecommendations'],
+    ['/api/customer-health-score', './routes/customerHealthScore'],
+    ['/api/outage-notification', './routes/outageNotification'],
+    ['/api/gap-critical-no-ai-endpoints-for-churn-prediction-sentiment', './routes/gapCriticalNoAiEndpointsForChurnPredictionSentiment'],
+    ['/api/gap-no-conversational-customer-service-copilot', './routes/gapNoConversationalCustomerServiceCopilot'],
+    ['/api/gap-no-retention-offer-optimizer', './routes/gapNoRetentionOfferOptimizer'],
+    ['/api/gap-no-multi-channel-contact-history-phone-sms-email-chat', './routes/gapNoMultiChannelContactHistoryPhoneSmsEmailChat'],
+    ['/api/gap-limited-billing-system-integrations-only-stub-layer-no', './routes/gapLimitedBillingSystemIntegrationsOnlyStubLayerNo'],
+    ['/api/gap-no-customer-self-service-portal', './routes/gapNoCustomerSelfServicePortal'],
+    ['/api/gap-no-correlation-engine-between-network-performance-and-satisfaction', './routes/gapNoCorrelationEngineBetweenNetworkPerformanceAndSatisfaction'],
+    ['/api/gap-no-webhooks-for-outage-events', './routes/gapNoWebhooksForOutageEvents'],
+    ['/api/gap-limited-notifications-one-reference-only-not-a-full', './routes/gapLimitedNotificationsOneReferenceOnlyNotAFull'],
+    ['/api/gap-no-audit-logging', './routes/gapNoAuditLogging'],
+  ];
+  for (const [routePath, modulePath] of legacyRoutes) app.use(routePath, require(modulePath));
+}
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-app.use('/api/churn-early-warning', require('./routes/churnEarlyWarning')); app.use('/api/sentiment-routing', require('./routes/sentimentRouting')); app.use('/api/call-quality-rca', require('./routes/callQualityRca')); app.use('/api/dynamic-plan-recommendations', require('./routes/dynamicPlanRecommendations')); app.use('/api/customer-health-score', require('./routes/customerHealthScore')); app.use('/api/outage-notification', require('./routes/outageNotification'));
-
-// === Batch 08 Gaps & Frontend Mounts ===
-app.use('/api/gap-critical-no-ai-endpoints-for-churn-prediction-sentiment', require('./routes/gapCriticalNoAiEndpointsForChurnPredictionSentiment'));
-app.use('/api/gap-no-conversational-customer-service-copilot', require('./routes/gapNoConversationalCustomerServiceCopilot'));
-app.use('/api/gap-no-retention-offer-optimizer', require('./routes/gapNoRetentionOfferOptimizer'));
-app.use('/api/gap-no-multi-channel-contact-history-phone-sms-email-chat', require('./routes/gapNoMultiChannelContactHistoryPhoneSmsEmailChat'));
-app.use('/api/gap-limited-billing-system-integrations-only-stub-layer-no', require('./routes/gapLimitedBillingSystemIntegrationsOnlyStubLayerNo'));
-app.use('/api/gap-no-customer-self-service-portal', require('./routes/gapNoCustomerSelfServicePortal'));
-app.use('/api/gap-no-correlation-engine-between-network-performance-and-satisfaction', require('./routes/gapNoCorrelationEngineBetweenNetworkPerformanceAndSatisfaction'));
-app.use('/api/gap-no-webhooks-for-outage-events', require('./routes/gapNoWebhooksForOutageEvents'));
-app.use('/api/gap-limited-notifications-one-reference-only-not-a-full', require('./routes/gapLimitedNotificationsOneReferenceOnlyNotAFull'));
-app.use('/api/gap-no-audit-logging', require('./routes/gapNoAuditLogging'));
-
-// Custom Views — mounted BEFORE 404 handler
-app.use('/api/custom-views', require('./routes/customViews'));
-
-// 404 for unknown /api/* paths
-app.use('/api', (req, res) => {
-  res.status(404).json({ error: 'Not found', path: req.originalUrl });
-});
-
-// Error handler
+app.use('/api', (req, res) => res.status(404).json({ error: 'Not found', path: req.originalUrl }));
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  console.error('Unhandled error:', err.message);
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend server running on port ${PORT}`);
-});
+if (require.main === module) app.listen(PORT, () => console.log(`Backend server running on port ${PORT}`));
+
+module.exports = app;

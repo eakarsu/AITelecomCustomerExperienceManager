@@ -3,6 +3,12 @@ require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
+if (process.env.NODE_ENV === 'production' || process.env.ALLOW_DEMO_SEED !== 'true') {
+  throw new Error('Demo seeding requires ALLOW_DEMO_SEED=true outside production.');
+}
+const demoPassword = String(process.env.DEMO_PASSWORD || '');
+if (demoPassword.length < 12) throw new Error('DEMO_PASSWORD must contain at least 12 characters.');
+
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 async function seed() {
@@ -321,7 +327,7 @@ async function seed() {
   console.log('✅ Tables created');
 
   // Seed users
-  const passwordHash = await bcrypt.hash('admin123', 10);
+  const passwordHash = await bcrypt.hash(demoPassword, 12);
   await pool.query(`
     INSERT INTO users (name, email, password_hash, role) VALUES
     ('Admin User', 'admin@telecom.com', $1, 'admin'),
@@ -669,7 +675,7 @@ async function seed() {
   console.log('\n🎉 Database seeded successfully!');
   console.log('📧 Login credentials:');
   console.log('   Email: admin@telecom.com');
-  console.log('   Password: admin123');
+  console.log('   Password: supplied through DEMO_PASSWORD');
 
   await pool.end();
 }
