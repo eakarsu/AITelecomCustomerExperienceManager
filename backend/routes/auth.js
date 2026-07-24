@@ -34,7 +34,14 @@ router.post('/login', async (req, res) => {
 
 // Get current user
 router.get('/me', require('../middleware/auth'), async (req, res) => {
-  res.json(req.user);
+  try {
+    const pool = req.app.get('db');
+    const result = await pool.query('SELECT id, email, name, role FROM users WHERE id = $1 LIMIT 1', [req.user.id]);
+    if (!result.rows[0]) return res.status(401).json({ error: 'Session user no longer exists' });
+    res.json(result.rows[0]);
+  } catch (_error) {
+    res.status(500).json({ error: 'Unable to verify persisted session' });
+  }
 });
 
 module.exports = router;

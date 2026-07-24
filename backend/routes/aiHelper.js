@@ -1,6 +1,4 @@
-const https = require('https');
-
-const MODEL = 'anthropic/claude-3-5-sonnet-20241022';
+const MODEL = process.env.OPENROUTER_MODEL;
 
 // Parse AI JSON response robustly
 function parseAIJson(text) {
@@ -25,79 +23,40 @@ function parseAIJson(text) {
 
 async function queryOpenRouter(prompt, systemPrompt) {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.OPENROUTER_MODEL || MODEL;
-
-  const body = JSON.stringify({
-    model: model,
-    messages: [
-      { role: 'system', content: systemPrompt || 'You are an AI analyst. Always respond with valid JSON only.' },
-      { role: 'user', content: prompt },
-    ],
-    max_tokens: 2000,
-    temperature: 0.7,
+  const model = process.env.OPENROUTER_MODEL;
+  const baseUrl = String(process.env.OPENROUTER_BASE_URL || '').replace(/\/$/, '');
+  if (!apiKey || !model || !baseUrl) throw new Error('Exact OpenRouter configuration is required');
+  const response = await fetch(`${baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+      'HTTP-Referer': process.env.CLIENT_URL,
+      'X-Title': 'AI Telecom CX Manager',
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt || 'You are an AI analyst. Always respond with valid JSON only.' },
+        { role: 'user', content: prompt },
+      ],
+      max_tokens: 2000,
+      temperature: 0.7,
+    }),
   });
-
-  return new Promise((resolve, reject) => {
-    const options = {
-      hostname: 'openrouter.ai',
-      path: '/api/v1/chat/completions',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'http://localhost:3000',
-        'X-Title': 'AI Telecom CX Manager',
-      },
-    };
-
-    const req = https.request(options, (res) => {
-      let data = '';
-      res.on('data', (chunk) => (data += chunk));
-      res.on('end', () => {
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed.error) {
-            reject(new Error(parsed.error.message || 'OpenRouter API error'));
-          } else {
-            const content = parsed.choices?.[0]?.message?.content || 'No response generated';
-            resolve({
-              content,
-              model: parsed.model,
-              usage: parsed.usage,
-            });
-          }
-        } catch (e) {
-          reject(new Error('Failed to parse AI response'));
-        }
-      });
-    });
-
-    req.on('error', reject);
-    req.write(body);
-    req.end();
-  });
+  if (!response.ok) throw new Error(`OpenRouter API error: ${response.status}`);
+  const parsed = await response.json();
+  const content = String(parsed.choices?.[0]?.message?.content || '').trim();
+  if (!content) throw new Error('OpenRouter returned empty content');
+  return { content, model: parsed.model || model, usage: parsed.usage };
 }
 
 // Persist AI result to database
 async function saveAIResult(pool, userId, endpoint, inputData, result) {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS ai_results (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER,
-        endpoint VARCHAR(100),
-        input_data JSONB,
-        result JSONB,
-        created_at TIMESTAMP DEFAULT NOW()
-      )
-    `);
-    await pool.query(
-      'INSERT INTO ai_results (user_id, endpoint, input_data, result) VALUES ($1, $2, $3, $4)',
-      [userId, endpoint, JSON.stringify(inputData), JSON.stringify(result)],
-    );
-  } catch (err) {
-    console.error('Error saving AI result:', err);
-  }
+  await pool.query(
+    'INSERT INTO ai_results (user_id, endpoint, input_data, result) VALUES ($1, $2, $3, $4)',
+    [userId, endpoint, JSON.stringify(inputData), JSON.stringify(result)],
+  );
 }
 
 module.exports = { queryOpenRouter, parseAIJson, saveAIResult, MODEL };
