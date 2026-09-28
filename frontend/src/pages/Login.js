@@ -56,7 +56,7 @@ function Login({ onLogin }) {
           </button>
 
           <button type="button" className="btn btn-fill" onClick={fillCredentials} style={{ width: '100%', justifyContent: 'center' }}>
-            Quick Fill Demo Credentials
+            Quick Auto Fill Demo Credentials
           </button>
         </form>
       </div>
