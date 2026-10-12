@@ -16,7 +16,7 @@ function ProactiveCare() {
     setLoadingCampaigns(true);
     try {
       const res = await aiAPI.outreachCampaigns();
-      const data = res.data?.data || res.data || [];
+      const data = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
       setCampaigns(data);
     } catch {
       setCampaigns([]);

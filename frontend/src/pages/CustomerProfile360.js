@@ -12,7 +12,7 @@ function StatBadge({ label, value, color }) {
 }
 
 function DataTab({ title, data, color }) {
-  if (!data || data.length === 0) return (
+  if (!Array.isArray(data) || data.length === 0) return (
     <div style={{ padding: '12px', color: '#555', fontStyle: 'italic' }}>No records</div>
   );
   const keys = Object.keys(data[0]).filter(k => !['id', 'ai_analysis'].includes(k)).slice(0, 6);
@@ -25,7 +25,7 @@ function DataTab({ title, data, color }) {
           </tr>
         </thead>
         <tbody>
-          {data.slice(0, 5).map((row, i) => (
+          {data.map((row, i) => (
             <tr key={i} style={{ borderBottom: '1px solid #1e293b' }}>
               {keys.map(k => (
                 <td key={k} style={{ padding: '8px', color: '#ccc' }}>
@@ -36,7 +36,6 @@ function DataTab({ title, data, color }) {
           ))}
         </tbody>
       </table>
-      {data.length > 5 && <div style={{ padding: '8px', color: '#555', fontSize: '0.8rem' }}>+{data.length - 5} more records</div>}
     </div>
   );
 }

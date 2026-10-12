@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+import api from '../services/api';
 
 export default function ContactThreads() {
   const [threads, setThreads] = useState([]);
@@ -18,8 +16,8 @@ export default function ContactThreads() {
   const loadThreads = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_URL}/contact-threads`, auth());
-      setThreads(res.data.threads || []);
+      const res = await api.get('/contact-threads', auth());
+      setThreads(Array.isArray(res.data?.threads) ? res.data.threads : []);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to load threads');
     } finally {
@@ -29,8 +27,8 @@ export default function ContactThreads() {
 
   const loadMessages = useCallback(async (id) => {
     try {
-      const res = await axios.get(`${API_URL}/contact-threads/${id}/messages`, auth());
-      setMessages(res.data.messages || []);
+      const res = await api.get(`/contact-threads/${id}/messages`, auth());
+      setMessages(Array.isArray(res.data?.messages) ? res.data.messages : []);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to load messages');
     }
@@ -41,7 +39,7 @@ export default function ContactThreads() {
   const createThread = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API_URL}/contact-threads`, {
+      await api.post('/contact-threads', {
         customer_id: parseInt(newThreadCustomerId, 10),
         subject: newThreadSubject,
       }, auth());
@@ -54,7 +52,7 @@ export default function ContactThreads() {
     e.preventDefault();
     if (!selectedId) return;
     try {
-      await axios.post(`${API_URL}/contact-threads/${selectedId}/messages`, newMsg, auth());
+      await api.post(`/contact-threads/${selectedId}/messages`, newMsg, auth());
       setNewMsg({ channel: 'email', direction: 'outbound', body: '' });
       loadMessages(selectedId);
     } catch (err) { setError(err.response?.data?.error || 'Add message failed'); }

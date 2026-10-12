@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 const empty = { name: '', trigger: 'nps_drop', threshold: '', route_to: 'retention_team', priority: 'medium', enabled: true, notes: '' };
 
@@ -16,7 +16,7 @@ function EscalationRulesEditor() {
   const load = async () => {
     setError('');
     try {
-      const r = await axios.get('http://localhost:3014/api/custom-views/escalation-rules', { headers: headers() });
+      const r = await api.get('/custom-views/escalation-rules', { headers: headers() });
       setRules(r.data.rules || []);
       setMeta({ allowedTriggers: r.data.allowedTriggers || [], allowedChannels: r.data.allowedChannels || [] });
     } catch (e) {
@@ -39,10 +39,10 @@ function EscalationRulesEditor() {
         threshold: draft.threshold === '' ? null : Number(draft.threshold),
       };
       if (editingId) {
-        await axios.put(`http://localhost:3014/api/custom-views/escalation-rules/${editingId}`, body, { headers: headers() });
+        await api.put(`/custom-views/escalation-rules/${editingId}`, body, { headers: headers() });
         setStatus('Rule updated.');
       } else {
-        await axios.post('http://localhost:3014/api/custom-views/escalation-rules', body, { headers: headers() });
+        await api.post('/custom-views/escalation-rules', body, { headers: headers() });
         setStatus('Rule created.');
       }
       reset();
@@ -68,7 +68,7 @@ function EscalationRulesEditor() {
   const remove = async (id) => {
     setError('');
     try {
-      await axios.delete(`http://localhost:3014/api/custom-views/escalation-rules/${id}`, { headers: headers() });
+      await api.delete(`/custom-views/escalation-rules/${id}`, { headers: headers() });
       setStatus('Rule deleted.');
       await load();
     } catch (e) {

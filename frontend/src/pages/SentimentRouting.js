@@ -1,7 +1,8 @@
+import AIReport from "../components/AIReport";
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_URL = `${(process.env.REACT_APP_API_URL || '').replace(/\/+$/, '').replace(/\/api$/, '') || ''}/api`;
 
 export default function SentimentRouting() {
   const [loading, setLoading] = useState(false);
@@ -49,9 +50,7 @@ export default function SentimentRouting() {
       {result && (
         <div className="card" style={{ padding: 24 }}>
           <h3 style={{ marginBottom: 14 }}>Result</h3>
-          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, background: '#0f172a', padding: 14, borderRadius: 8, color: '#cbd5e1', overflow: 'auto' }}>
-            {JSON.stringify(result, null, 2)}
-          </pre>
+          <AIReport response={result} />
         </div>
       )}
     </div>

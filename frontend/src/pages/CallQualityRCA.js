@@ -1,9 +1,14 @@
+import AIReport from '../components/AIReport';
+
+import FullAIExamples, { useFullAIExamples } from "../components/FullAIExamples.jsx";
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_URL = `${(process.env.REACT_APP_API_URL || '').replace(/\/+$/, '').replace(/\/api$/, '') || ''}/api`;
 
 export default function CallQualityRCA() {
+  const fullAIExamples = useFullAIExamples();
+
   const [form, setForm] = useState({
     region: '',
     tower_id: '',
@@ -47,24 +52,24 @@ export default function CallQualityRCA() {
         AI synthesizes calls, towers, and outage data to surface root causes for poor call quality.
       </p>
 
-      <form onSubmit={handleSubmit} className="card" style={{ padding: 24, marginBottom: 20 }}>
+      <form onSubmit={handleSubmit} className="card" style={{ padding: 24, marginBottom: 20 }} data-full-ai-workspace="CallQualityRCA"><FullAIExamples controller={fullAIExamples} disabled={Boolean(loading)} />
         <div className="form-grid">
           <div className="form-group">
             <label>Region</label>
-            <input type="text" value={form.region} onChange={(e) => handleChange('region', e.target.value)} placeholder="e.g. Bay Area" />
+            <input type="text" value={form.region} onChange={(e) => handleChange('region', e.target.value)} placeholder="e.g. Bay Area" data-full-ai-field={fullAIExamples.bind({ current: form.region, change: (e) => handleChange('region', e.target.value), label: "form.region", manual: false, json: false, sample: '' }, "p1-1742", undefined)} />
           </div>
           <div className="form-group">
             <label>Tower ID</label>
-            <input type="text" value={form.tower_id} onChange={(e) => handleChange('tower_id', e.target.value)} placeholder="e.g. T-1234" />
+            <input type="text" value={form.tower_id} onChange={(e) => handleChange('tower_id', e.target.value)} placeholder="e.g. T-1234" data-full-ai-field={fullAIExamples.bind({ current: form.tower_id, change: (e) => handleChange('tower_id', e.target.value), label: "form.tower_id", manual: false, json: false, sample: '' }, "p1-1973", undefined)} />
           </div>
           <div className="form-group">
             <label>Time Window (hours)</label>
-            <input type="number" min={1} max={720} value={form.time_window_hours} onChange={(e) => handleChange('time_window_hours', e.target.value)} />
+            <input type="number" min={1} max={720} value={form.time_window_hours} onChange={(e) => handleChange('time_window_hours', e.target.value)} data-full-ai-field={fullAIExamples.bind({ current: form.time_window_hours, change: (e) => handleChange('time_window_hours', e.target.value), label: "form.time_window_hours", manual: false, json: false, sample: 24 }, "p1-2217", undefined)} />
           </div>
         </div>
         <div className="form-group" style={{ marginTop: 14 }}>
           <label>Notes / Context</label>
-          <textarea rows={3} value={form.notes} onChange={(e) => handleChange('notes', e.target.value)} placeholder="Weather, planned work, recent firmware updates..." />
+          <textarea rows={3} value={form.notes} onChange={(e) => handleChange('notes', e.target.value)} placeholder="Weather, planned work, recent firmware updates..." data-full-ai-field={fullAIExamples.bind({ current: form.notes, change: (e) => handleChange('notes', e.target.value), label: "form.notes", manual: false, json: false, sample: '' }, "p1-2504", undefined)} />
         </div>
         <button type="submit" className="btn btn-ai" disabled={loading} style={{ marginTop: 14 }}>
           {loading ? 'Analyzing...' : 'Run Root Cause Analysis'}
@@ -76,9 +81,7 @@ export default function CallQualityRCA() {
       {result && (
         <div className="card" style={{ padding: 24 }}>
           <h3 style={{ marginBottom: 14 }}>Root Cause Findings</h3>
-          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, background: '#0f172a', padding: 14, borderRadius: 8, color: '#cbd5e1', overflow: 'auto' }}>
-            {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
-          </pre>
+          <AIReport response={result} title={"Call quality root cause analysis"} />
         </div>
       )}
     </div>

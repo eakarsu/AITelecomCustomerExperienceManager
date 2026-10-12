@@ -1,9 +1,14 @@
+
+import FullAIExamples, { useFullAIExamples } from "../components/FullAIExamples.jsx";
+import AIReport from "../components/AIReport";
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_URL = `${(process.env.REACT_APP_API_URL || '').replace(/\/+$/, '').replace(/\/api$/, '') || ''}/api`;
 
 export default function DynamicPlanRecommendations() {
+  const fullAIExamples = useFullAIExamples();
+
   const [customerId, setCustomerId] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -41,14 +46,14 @@ export default function DynamicPlanRecommendations() {
         Recommends 3-5 plans tailored to a customer's actual usage and budget signals.
       </p>
 
-      <form onSubmit={handleSubmit} className="card" style={{ padding: 24, marginBottom: 20 }}>
+      <form onSubmit={handleSubmit} className="card" style={{ padding: 24, marginBottom: 20 }} data-full-ai-workspace="DynamicPlanRecommendations"><FullAIExamples controller={fullAIExamples} disabled={Boolean(loading)} />
         <div className="form-group">
           <label>Customer ID</label>
           <input
             type="number"
             value={customerId}
             onChange={(e) => setCustomerId(e.target.value)}
-            required
+            required data-full-ai-field={fullAIExamples.bind({ current: customerId, change: (e) => setCustomerId(e.target.value), label: "customerId", manual: false, json: false, sample: '' }, "p1-1635", undefined)}
           />
         </div>
         <button type="submit" className="btn btn-ai" disabled={loading || !customerId} style={{ marginTop: 14 }}>
@@ -61,9 +66,7 @@ export default function DynamicPlanRecommendations() {
       {result && (
         <div className="card" style={{ padding: 24 }}>
           <h3 style={{ marginBottom: 14 }}>Recommendations</h3>
-          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, background: '#0f172a', padding: 14, borderRadius: 8, color: '#cbd5e1', overflow: 'auto' }}>
-            {JSON.stringify(result, null, 2)}
-          </pre>
+          <AIReport response={result} />
         </div>
       )}
     </div>

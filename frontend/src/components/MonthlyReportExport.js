@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 function defaultPeriod() {
   const d = new Date();
@@ -17,7 +17,7 @@ function MonthlyReportExport() {
     setPreview(null);
     try {
       const token = localStorage.getItem('token');
-      const r = await axios.get(`http://localhost:3014/api/custom-views/monthly-report?format=json&period=${encodeURIComponent(p)}`, {
+      const r = await api.get(`/custom-views/monthly-report?format=json&period=${encodeURIComponent(p)}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPreview(r.data);
@@ -35,7 +35,7 @@ function MonthlyReportExport() {
     setError('');
     try {
       const token = localStorage.getItem('token');
-      const r = await axios.get(`http://localhost:3014/api/custom-views/monthly-report?period=${encodeURIComponent(period)}`, {
+      const r = await api.get(`/custom-views/monthly-report?period=${encodeURIComponent(period)}`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob',
       });

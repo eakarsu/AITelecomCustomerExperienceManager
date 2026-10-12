@@ -131,7 +131,9 @@ function Dashboard() {
       for (const f of allFeatures) {
         try {
           const res = await f.api.getAll();
-          results[f.key] = res.data.length;
+          const rows = Array.isArray(res.data) ? res.data : res.data?.data;
+          results[f.key] = Number.isFinite(Number(res.data?.pagination?.total))
+            ? Number(res.data.pagination.total) : (Array.isArray(rows) ? rows.length : 0);
         } catch {
           results[f.key] = 0;
         }

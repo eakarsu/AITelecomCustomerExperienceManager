@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 const colors = ['#60a5fa', '#34d399', '#f59e0b', '#f472b6'];
 
@@ -9,8 +9,8 @@ function NPSTrendChart() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    axios
-      .get('http://localhost:3014/api/custom-views/nps-trend?weeks=12', {
+    api
+      .get('/custom-views/nps-trend?weeks=12', {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((r) => setData(r.data))

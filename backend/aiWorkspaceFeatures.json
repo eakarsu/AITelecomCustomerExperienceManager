@@ -1,0 +1,114 @@
+[
+  {
+    "name": "CfAutomatedOutageNotificationSystemWithSmsEmail",
+    "id": "cf-automated-outage-notification-system-with-sms-email-blast/history",
+    "title": "Automated outage notification system with SMS/email blast",
+    "description": "Prepare a professional advisory report for automated outage notification system with sms/email blast using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "CfCallQualityRootCauseAnalysisCorrelatingWith",
+    "id": "cf-call-quality-root-cause-analysis-correlating-with-network-customer/history",
+    "title": "Call quality root-cause analysis correlating with network/customer factors",
+    "description": "Prepare a professional advisory report for call quality root-cause analysis correlating with network/customer factors using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "CfChurnEarlyWarningSystemWithRealTime",
+    "id": "cf-churn-early-warning-system-with-real-time-scoring-and-retention/history",
+    "title": "Churn early-warning system with real-time scoring and retention campaigns",
+    "description": "Prepare a professional advisory report for churn early-warning system with real-time scoring and retention campaigns using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "CfCompositeCustomerHealthScorePaymentSatisfactionChurn",
+    "id": "cf-composite-customer-health-score-payment-satisfaction-churn-nps/history",
+    "title": "Composite customer health score (payment + satisfaction + churn + NPS)",
+    "description": "Prepare a professional advisory report for composite customer health score (payment + satisfaction + churn + nps) using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "CfDynamicPlanRecommendationsFromUsagePatternsAccount",
+    "id": "cf-dynamic-plan-recommendations-from-usage-patterns-account-risk/history",
+    "title": "Dynamic plan recommendations from usage patterns + account risk",
+    "description": "Prepare a professional advisory report for dynamic plan recommendations from usage patterns + account risk using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "CfSentimentDrivenRoutingEscalatingNegativeCallsTo",
+    "id": "cf-sentiment-driven-routing-escalating-negative-calls-to-specialists/history",
+    "title": "Sentiment-driven routing escalating negative calls to specialists",
+    "description": "Prepare a professional advisory report for sentiment-driven routing escalating negative calls to specialists using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "GapCriticalNoAiEndpointsForChurnPrediction",
+    "id": "gap-critical-no-ai-endpoints-for-churn-prediction-sentiment/history",
+    "title": "Critical: No AI endpoints for churn prediction, sentiment analysis, call quality assessment, NPS prediction (data routes exist but no ML)",
+    "description": "Prepare a professional advisory report for critical: no ai endpoints for churn prediction, sentiment analysis, call quality assessment, nps prediction (data routes exist but no ml) using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "GapLimitedBillingSystemIntegrationsOnlyStubLayer",
+    "id": "gap-limited-billing-system-integrations-only-stub-layer-no/history",
+    "title": "Limited billing system integrations (only stub layer; no Comtech, Openet)",
+    "description": "Prepare a professional advisory report for limited billing system integrations (only stub layer; no comtech, openet) using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "GapLimitedNotificationsOneReferenceOnlyNotA",
+    "id": "gap-limited-notifications-one-reference-only-not-a-full/history",
+    "title": "Limited notifications (one reference only — not a full subsystem)",
+    "description": "Prepare a professional advisory report for limited notifications (one reference only — not a full subsystem) using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "GapNoAuditLogging",
+    "id": "gap-no-audit-logging/history",
+    "title": "No audit logging",
+    "description": "Prepare a professional advisory report for no audit logging using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "GapNoConversationalCustomerServiceCopilot",
+    "id": "gap-no-conversational-customer-service-copilot/history",
+    "title": "No conversational customer-service copilot",
+    "description": "Prepare a professional advisory report for no conversational customer-service copilot using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "GapNoCorrelationEngineBetweenNetworkPerformanceAnd",
+    "id": "gap-no-correlation-engine-between-network-performance-and-satisfaction/history",
+    "title": "No correlation engine between network performance and satisfaction",
+    "description": "Prepare a professional advisory report for no correlation engine between network performance and satisfaction using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "GapNoCustomerSelfServicePortal",
+    "id": "gap-no-customer-self-service-portal/history",
+    "title": "No customer self-service portal",
+    "description": "Prepare a professional advisory report for no customer self-service portal using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "GapNoMultiChannelContactHistoryPhoneSms",
+    "id": "gap-no-multi-channel-contact-history-phone-sms-email-chat/history",
+    "title": "No multi-channel contact history (phone, SMS, email, chat unified)",
+    "description": "Prepare a professional advisory report for no multi-channel contact history (phone, sms, email, chat unified) using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "GapNoRetentionOfferOptimizer",
+    "id": "gap-no-retention-offer-optimizer/history",
+    "title": "No retention offer optimizer",
+    "description": "Prepare a professional advisory report for no retention offer optimizer using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "GapNoWebhooksForOutageEvents",
+    "id": "gap-no-webhooks-for-outage-events/history",
+    "title": "No webhooks for outage events",
+    "description": "Prepare a professional advisory report for no webhooks for outage events using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  }
+]

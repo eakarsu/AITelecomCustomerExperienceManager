@@ -23,9 +23,19 @@ function Login({ onLogin }) {
     }
   };
 
-  const fillCredentials = () => {
-    setEmail(process.env.REACT_APP_DEMO_EMAIL || '');
-    setPassword(process.env.REACT_APP_DEMO_PASSWORD || '');
+  const handleDemoLogin = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const res = await authAPI.demoLogin();
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      onLogin();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Demo sign-in is unavailable.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -55,8 +65,8 @@ function Login({ onLogin }) {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
 
-          <button type="button" className="btn btn-fill" onClick={fillCredentials} style={{ width: '100%', justifyContent: 'center' }}>
-            Quick Auto Fill Demo Credentials
+          <button type="button" className="btn btn-fill" onClick={handleDemoLogin} disabled={loading} style={{ width: '100%', justifyContent: 'center' }}>
+            Quick Log In as Demo
           </button>
         </form>
       </div>

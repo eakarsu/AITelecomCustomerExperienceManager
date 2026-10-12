@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 function colorFor(value, max) {
   if (max === 0) return '#1e293b';
@@ -17,8 +17,8 @@ function JourneyHeatmap() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    axios
-      .get('http://localhost:3014/api/custom-views/journey-heatmap', {
+    api
+      .get('/custom-views/journey-heatmap', {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((r) => setData(r.data))

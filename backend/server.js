@@ -54,8 +54,7 @@ const protectedRoutes = [
 ];
 for (const [routePath, modulePath] of protectedRoutes) app.use(routePath, require(modulePath));
 
-if (process.env.ENABLE_LEGACY_PROVIDER_ROUTES === 'true') {
-  const legacyRoutes = [
+const legacyRoutes = [
     ['/api/call-quality', './routes/callQuality'],
     ['/api/dropped-calls', './routes/droppedCalls'],
     ['/api/plan-recommendations', './routes/planRecommendations'],
@@ -85,10 +84,17 @@ if (process.env.ENABLE_LEGACY_PROVIDER_ROUTES === 'true') {
     ['/api/gap-no-webhooks-for-outage-events', './routes/gapNoWebhooksForOutageEvents'],
     ['/api/gap-limited-notifications-one-reference-only-not-a-full', './routes/gapLimitedNotificationsOneReferenceOnlyNotAFull'],
     ['/api/gap-no-audit-logging', './routes/gapNoAuditLogging'],
-  ];
-  for (const [routePath, modulePath] of legacyRoutes) app.use(routePath, require(modulePath));
-}
+];
+for (const [routePath, modulePath] of legacyRoutes) app.use(routePath, require(modulePath));
 
+
+// Advisory AI reports only; native execution and approval routes stay unchanged.
+const aiWorkspaceSupport = require("./aiWorkspaceAdapters.cjs");
+const aiWorkspaceDatabase = require("./db.js");
+app.use('/api/report-workspace', require("./aiWorkspace.cjs").createAIWorkspaceRouter({
+  pool: aiWorkspaceDatabase, authenticateToken: require("./middleware/auth.js"),
+  aiRateLimiter: aiWorkspaceSupport.createWorkspaceLimiter(), features: require("./aiWorkspaceFeatures.json"),
+}));
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found', path: req.originalUrl }));
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err.message);

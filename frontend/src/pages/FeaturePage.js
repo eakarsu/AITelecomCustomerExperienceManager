@@ -1,3 +1,5 @@
+
+import FullAIExamples, { useFullAIExamples } from "../components/FullAIExamples.jsx";
 import React, { useState, useEffect, useCallback } from 'react';
 import { callQualityAPI, droppedCallsAPI, planRecommendationsAPI, proactiveIssuesAPI, npsPredictionAPI, churnAnalysisAPI, networkOutagesAPI, customerSentimentAPI, billingDisputesAPI, slaComplianceAPI, towerPerformanceAPI } from '../services/api';
 import AIAnalysis from '../components/AIAnalysis';
@@ -272,6 +274,8 @@ function formatFieldLabel(key) {
 }
 
 function FeaturePage({ feature }) {
+  const fullAIExamples = useFullAIExamples();
+
   const config = featureConfig[feature];
   const [data, setData] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -290,7 +294,7 @@ function FeaturePage({ feature }) {
       setLoading(true);
       const res = await config.api.getAll();
       // Handle both paginated { data, pagination } and flat array responses
-      setData(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+      setData(Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []));
     } catch (err) {
       showToast('Failed to load data', 'error');
     } finally {
@@ -520,7 +524,7 @@ function FeaturePage({ feature }) {
               <button className="modal-close" onClick={() => setShowForm(false)}>&times;</button>
             </div>
             <form onSubmit={handleSubmit}>
-              <div className="modal-body">
+              <div className="modal-body" data-full-ai-workspace="FeaturePage"><FullAIExamples controller={fullAIExamples} disabled={Boolean(aiLoading || loading)} />
                 <div className="form-grid">
                   {config.fields.map(field => (
                     <div key={field.key} className="form-group">
@@ -529,7 +533,7 @@ function FeaturePage({ feature }) {
                         <select
                           value={formData[field.key] || ''}
                           onChange={e => setFormData({...formData, [field.key]: e.target.value})}
-                          required
+                          required data-full-ai-field={fullAIExamples.bind({ current: formData[field.key] || '', change: e => setFormData({...formData, [field.key]: e.target.value}), label: "formData[field.key]", manual: false, json: false }, "p1-28784", [(typeof field === 'object' ? field?.key ?? field?.name ?? field?.id ?? '' : field),field.key].join(":"))}
                         >
                           <option value="">Select...</option>
                           {field.options.map(opt => (
@@ -542,7 +546,7 @@ function FeaturePage({ feature }) {
                           step={field.type === 'number' ? 'any' : undefined}
                           value={formData[field.key] || ''}
                           onChange={e => setFormData({...formData, [field.key]: e.target.value})}
-                          required={field.key === 'customer_name'}
+                          required={field.key === 'customer_name'} data-full-ai-field={fullAIExamples.bind({ current: formData[field.key] || '', change: e => setFormData({...formData, [field.key]: e.target.value}), label: "formData[field.key]", manual: false, json: false }, "p1-29316", [(typeof field === 'object' ? field?.key ?? field?.name ?? field?.id ?? '' : field),field.key].join(":"))}
                         />
                       )}
                     </div>

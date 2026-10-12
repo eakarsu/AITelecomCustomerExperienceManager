@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE = process.env.REACT_APP_API_URL || '/api';
+const configuredAPI = (process.env.REACT_APP_API_URL || '').replace(/\/$/, '');
+const API_BASE = configuredAPI ? (/\/api$/.test(configuredAPI) ? configuredAPI : `${configuredAPI}/api`) : '/api';
 
 const api = axios.create({ baseURL: API_BASE });
 
@@ -24,6 +25,7 @@ api.interceptors.response.use(
 
 export const authAPI = {
   login: (email, password) => api.post('/auth/login', { email, password }),
+  demoLogin: () => api.post('/auth/demo-login'),
 };
 
 const createCRUD = (endpoint) => ({
