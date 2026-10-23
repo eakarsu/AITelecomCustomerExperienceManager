@@ -6,6 +6,11 @@ const auth = require('../middleware/auth');
 router.get('/', auth, async (req, res) => {
   try {
     const pool = req.app.get('db');
+    const q=String(req.query.search||'').trim(); const conds=[]; const vals=[];
+    if(q){ vals.push('%'+q+'%'); conds.push('(customer_name ILIKE $'+vals.length+' OR email ILIKE $'+vals.length+')'); }
+    if(req.query.plan_type){ vals.push(req.query.plan_type); conds.push('plan_type = $'+vals.length); }
+    if(req.query.account_status){ vals.push(req.query.account_status); conds.push('account_status = $'+vals.length); }
+    if(conds.length){ const r=await pool.query('SELECT * FROM customer_profiles WHERE '+conds.join(' AND ')+' ORDER BY created_at DESC',vals); return res.json(r.rows); }
     const result = await pool.query('SELECT * FROM customer_profiles ORDER BY created_at DESC');
     res.json(result.rows);
   } catch (err) {

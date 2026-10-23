@@ -95,6 +95,7 @@ app.use('/api/report-workspace', require("./aiWorkspace.cjs").createAIWorkspaceR
   pool: aiWorkspaceDatabase, authenticateToken: require("./middleware/auth.js"),
   aiRateLimiter: aiWorkspaceSupport.createWorkspaceLimiter(), features: require("./aiWorkspaceFeatures.json"),
 }));
+app.use('/api', require('./routes/featurePack'));
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found', path: req.originalUrl }));
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err.message);
